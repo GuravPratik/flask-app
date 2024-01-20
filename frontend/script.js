@@ -222,8 +222,9 @@ function getAlbumsInfo(userId, userName) {
   <div>
     <div>
       <h2>${userName} Albums Info</h2>
+      <button onclick="createAlbum(${userId})">Add new Album</button>
     </div>
-    <div>
+    <div id="info">
       <table>
         <thead>
           <tr>
@@ -241,6 +242,14 @@ function getAlbumsInfo(userId, userName) {
 
   $.get(url + `/albums?userId=${userId}`, (albums) => {
     let rowsFromJson = "";
+
+    if (albums.length === 0) {
+      $("#info").html(`
+      <h1 style="margin:10px 0;">Nothing to show...</h1>
+      `);
+      return;
+    }
+
     albums.forEach((album) => {
       rowsFromJson += `<tr>
           <td class="align-right">${album.userId}</td>
@@ -310,6 +319,39 @@ function editAlbum(albumId) {
   });
 }
 
+function createAlbum(userId) {
+  cleanUp();
+  $(".container").html(`
+    <div>
+    <h2>Create new album</h2>
+    </div>
+    <div>
+      <form id="create-form" method="POST">
+        <label for="title">Title</label>
+        <input id="title" name="title" type="text"/>
+        <input type="submit" value="create" />
+      </form>
+    </div>  
+  `);
+
+  $("#create-form").submit(function (event) {
+    event.preventDefault();
+
+    const formData = $(this).serialize();
+    $.ajax({
+      type: "POST",
+      url: `${url}/add/albums?userId=${userId}`,
+      data: formData,
+      success: function (response) {
+        alert(response.message);
+      },
+      error: function (error) {
+        console.error("Creation failed", error);
+      },
+    });
+  });
+}
+
 function deleteAlbum(albumId) {
   $.post(`${url}/album/delete?albumId=${albumId}`, (response) => {
     alert(response.message);
@@ -319,6 +361,13 @@ function deleteAlbum(albumId) {
 function getPhotos(albumId, title) {
   $.get(url + `/albums/photos?albumId=${albumId}`, (photos) => {
     const photosDiv = $("#images");
+    if (photos.length === 0) {
+      photosDiv.html(`
+          <h1 style="margin:10px 0;">Nothing to show...</h1>
+        `);
+      return;
+    }
+
     photosDiv.html(`<h3>${title} Albums Photos</h3>`);
 
     const gridContainer = $("<div>").addClass("photo-grid");

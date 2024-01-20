@@ -117,7 +117,28 @@ def add_user():
         return jsonify({"error": "Data file not found"}), 404
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON data"}), 500
+    
 
+@app.route("/add/albums", methods=['POST'])
+def create_album():
+    user_id = int(request.args.get('userId'))
+    try:
+        with open(ALBUMS_DATA,"r") as json_file:
+            albums = json.load(json_file)
+            last_albums_id = albums[len(albums) - 1]['id']
+            new_album = {
+                "id": last_albums_id + 1,
+                "userId":user_id,
+                "title":request.form['title']
+            }
+            albums.append(new_album)
+            with open(ALBUMS_DATA, 'w') as json_file:
+                json.dump(albums, json_file, indent=2)
+            return jsonify({"message":"Album is created successfully"})
+    except FileNotFoundError:
+        return jsonify({"error": "Data file not found"}), 404
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid JSON data"}), 500
 
 @app.route("/albums")
 def show_albums():
@@ -187,7 +208,6 @@ def delete_album():
         return jsonify({"error": "Data file not found"}), 404
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON data"}), 500
-
 
 
 @app.route('/albums/photos')
